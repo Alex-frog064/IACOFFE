@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafetería IA — Pedidos con Voz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-inner">
+      <div class="splash-logo">☕</div>
+      <h2>Cafetería IA</h2>
+      <div class="splash-loader"><span></span><span></span><span></span></div>
+      <p>Cargando tu sesión...</p>
+    </div>
+  </div>
+
+  <div class="app app-hidden" id="appRoot">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-icon">☕</span>
+          <span class="brand-text">Cafetería IA</span>
+        </div>
+        <div class="user-badge" id="userBadge">
+          <span class="user-name" id="userName">—</span>
+          <span class="user-role" id="userRole">—</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+
+      <div class="sidebar-section customer-only" id="conversationsSection">
+        <p class="sidebar-label">Conversaciones</p>
+        <ul class="conversation-list" id="conversationList">
+          <li class="conversation-empty">Cargando...</li>
+        </ul>
+      </div>
+
+      <div class="cart-panel customer-only" id="cartPanel">
+        <p class="sidebar-label">Tu pedido</p>
+        <div class="cart-items" id="cartItems">
+          <p class="cart-empty">Sin productos aún</p>
+        </div>
+        <div class="cart-total hidden" id="cartTotal">
+          <span>Total estimado</span>
+          <strong id="cartTotalAmount">$0.00</strong>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-logout" id="btnLogout" type="button">Cerrar sesión</button>
+        <span class="footer-badge">llama3.1 · Voz · GPS</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="chat-header">
+        <button class="btn-menu" id="btnMenu" type="button" aria-label="Abrir menú">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <div class="header-info">
+          <h1 class="header-title" id="viewTitle">Agente de Pedidos</h1>
+          <p class="header-subtitle" id="conversationIdDisplay">Sin conversación activa</p>
+          <p class="header-state hidden" id="conversationStateDisplay"></p>
+        </div>
+        <div class="header-status">
+          <span class="status-dot"></span>
+          <span>En línea</span>
+        </div>
+      </header>
+
+      <div class="status-banner hidden" id="statusBanner"></div>
+
+      <!-- Vista chat (cliente) -->
+      <div class="view-panel active" id="viewChat">
+        <div class="chat-area" id="chatArea">
+          <div class="welcome-card" id="welcomeCard">
+            <div class="welcome-icon">☕</div>
+            <h2>¿Qué te gustaría pedir?</h2>
+            <p>Habla o escribe tu pedido. Te guiamos paso a paso hasta confirmarlo.</p>
+            <div class="suggestion-grid" id="suggestionGrid">
+              <button class="suggestion-chip" type="button" data-prompt="Quiero 2 frappes de oreo y una crepa">
+                🥤 Pedido combo
+              </button>
+              <button class="suggestion-chip" type="button" data-prompt="Quiero un frappe de oreo">
+                🧋 Frappe de oreo
+              </button>
+              <button class="suggestion-chip" type="button" data-prompt="Quiero pedir">
+                🛒 Hacer pedido
+              </button>
+              <button class="suggestion-chip admin-only hidden" type="button" data-prompt="¿Cuál es la ganancia del día?">
+                📊 Ganancia del día
+              </button>
+            </div>
+          </div>
+          <div class="messages" id="messages"></div>
+        </div>
+
+        <footer class="input-area" id="chatInputArea">
+          <form class="input-form" id="chatForm">
+            <div class="input-actions">
+              <button class="btn-action btn-location hidden" id="btnLocation" type="button" title="Compartir ubicación">
+                📍 Compartir ubicación
+              </button>
+            </div>
+            <div class="input-card">
+              <button class="btn-mic" id="btnMic" type="button" aria-label="Mantén para hablar">
+                <svg class="mic-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
+              <textarea
+                id="messageInput"
+                rows="1"
+                placeholder="Escribe o mantén 🎤 para hablar..."
+                autocomplete="off"
+              ></textarea>
+              <button class="btn-send" id="btnSend" type="submit" aria-label="Enviar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+            <p class="input-hint" id="inputHint">Mantén presionado el micrófono para hablar</p>
+          </form>
+        </footer>
+      </div>
+
+      <!-- Vista pedidos (cliente) -->
+      <div class="view-panel" id="viewOrders">
+        <div class="panel-content">
+          <h2>Mis pedidos</h2>
+          <div class="orders-list" id="myOrdersTable">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Vista admin dashboard -->
+      <div class="view-panel" id="viewDashboard">
+        <div class="panel-content">
+          <h2>Dashboard</h2>
+          <div class="dashboard-cards" id="statsGrid"></div>
+        </div>
+      </div>
+
+      <!-- Vista admin pedidos -->
+      <div class="view-panel" id="viewAdminOrders">
+        <div class="panel-content">
+          <h2>Pedidos</h2>
+          <div class="data-table-wrap" id="adminOrdersTable">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Vista admin usuarios -->
+      <div class="view-panel" id="viewUsers">
+        <div class="panel-content">
+          <h2>Usuarios</h2>
+          <div class="data-table-wrap" id="usersTable">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Vista admin actividad -->
+      <div class="view-panel" id="viewActivity">
+        <div class="panel-content">
+          <h2>Actividad de usuarios</h2>
+          <div class="data-table-wrap" id="activityTable">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Vista admin productos -->
+      <div class="view-panel" id="viewProducts">
+        <div class="panel-content">
+          <h2>Productos</h2>
+          <div class="data-table-wrap" id="productsTable">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- Vista admin conversaciones -->
+      <div class="view-panel" id="viewAdminConversations">
+        <div class="panel-content">
+          <h2>Conversaciones</h2>
+          <div class="data-table-wrap" id="adminConversationsTable">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="recording-overlay hidden" id="recordingOverlay">
+        <div class="recording-pulse"></div>
+        <p>Escuchando...</p>
+        <span>Suelta para enviar</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

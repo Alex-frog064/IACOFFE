@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cafetería IA — Iniciar sesión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="brand-icon">☕</span>
+        <h1>Cafetería IA</h1>
+        <p>Inicia sesión para continuar</p>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <label for="username">Usuario</label>
+        <input id="username" name="username" type="text" autocomplete="username" required placeholder="admin o cliente">
+
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+
+        <label for="fullName" id="fullNameLabel" class="hidden">Nombre completo</label>
+        <input id="fullName" name="fullName" type="text" autocomplete="name" class="hidden" placeholder="Tu nombre completo">
+
+        <p class="login-error hidden" id="loginError"></p>
+
+        <button type="submit" class="btn-login" id="btnLogin">Entrar</button>
+      </form>
+
+      <div class="login-actions">
+        <button class="btn-secondary" id="toggleRegister" type="button">Crear cuenta</button>
+      </div>
+
+      <div class="login-hints">
+        <p><strong>Admin:</strong> admin / admin123</p>
+        <p><strong>Cliente:</strong> cliente / cliente123</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTH_KEY = "cafe_auth";
+
+    if (localStorage.getItem(AUTH_KEY)) {
+      window.location.href = "/app";
+    }
+
+    const loginForm = document.getElementById("loginForm");
+    const toggleRegister = document.getElementById("toggleRegister");
+    const fullNameInput = document.getElementById("fullName");
+    const fullNameLabel = document.getElementById("fullNameLabel");
+
+    let registerMode = false;
+
+    function updateFormMode() {
+      if (registerMode) {
+        fullNameInput.classList.remove("hidden");
+        fullNameLabel.classList.remove("hidden");
+        toggleRegister.textContent = "Ya tengo cuenta";
+        btnLogin.textContent = "Registrarse";
+      } else {
+        fullNameInput.classList.add("hidden");
+        fullNameLabel.classList.add("hidden");
+        toggleRegister.textContent = "Crear cuenta";
+        btnLogin.textContent = "Entrar";
+      }
+    }
+
+    toggleRegister.addEventListener("click", () => {
+      registerMode = !registerMode;
+      updateFormMode();
+      document.getElementById("loginError").classList.add("hidden");
+    });
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btnLogin");
+      const errEl = document.getElementById("loginError");
+      errEl.classList.add("hidden");
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const fullName = document.getElementById("fullName").value.trim();
+
+      btn.disabled = true;
+      btn.textContent = registerMode ? "Registrando..." : "Entrando...";
+
+      try {
+        const url = registerMode ? "/auth/register" : "/auth/login";
+        const body = registerMode
+          ? { username, password, full_name: fullName }
+          : { username, password };
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || (registerMode ? "No se pudo registrar" : "Credenciales incorrectas"));
+        }
+
+        const data = await res.json();
+        localStorage.setItem(AUTH_KEY, JSON.stringify({ token: data.token, user: data.user }));
+        window.location.href = "/app";
+      } catch (err) {
+        errEl.textContent = err.message || (registerMode ? "Error al registrarse" : "Error al iniciar sesión");
+        errEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = registerMode ? "Registrarse" : "Entrar";
+      }
+    });
+
+    updateFormMode();
+  </script>
+</body>
+</html>
