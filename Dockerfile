@@ -19,8 +19,9 @@ COPY frontend/ frontend/
 ENV PYTHONPATH=/app
 ENV OLLAMA_BASE_URL=http://host.docker.internal:11434
 ENV OLLAMA_MODEL=llama3:latest
+ENV DATA_DIR=/app/data
 RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD sh -c "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"
