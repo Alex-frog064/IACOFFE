@@ -1,10 +1,12 @@
 import json
+import os
 import random
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "cafeteria.db"
+_data_dir = os.environ.get("DATA_DIR", str(Path(__file__).parent.parent))
+DB_PATH = Path(_data_dir) / "cafeteria.db"
 
 
 def get_connection() -> sqlite3.Connection:
