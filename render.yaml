@@ -5,7 +5,7 @@ services:
     dockerfilePath: ./Dockerfile
     envVars:
       - key: OLLAMA_BASE_URL
-        sync: false
+        value: https://60df-2806-370-8421-fdc8-b809-1ee2-8bab-c977.ngrok-free.app
       - key: OLLAMA_MODEL
         value: llama3:latest
       - key: DATA_DIR
